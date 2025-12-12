@@ -1,23 +1,25 @@
 #!/bin/bash
 
+#echo "$(date) PID=$$" >> /tmp/myscript.pidlog
+
 tooltip=$(playerctl metadata --format '{{ artist }} - {{ title }}')
 
+status=$(playerctl -i firefox,chromium status)
+artist=$(playerctl -i firefox,chromium metadata --format '{{ trunc(artist,24) }} - {{ trunc(title,26) }}')
+duration=$(playerctl -i firefox,chromium metadata --format '{{ duration(position) }} | {{ duration(mpris:length) }}')
 
-if [ "$(playerctl -i firefox,chromium status)" = "Playing" ]
-then
-	output=$(playerctl -i firefox,chromium metadata --format '{{ trunc(artist,24) }} - {{ trunc(title,26) }}')
-        output2=$(playerctl -i firefox,chromium metadata --format '{{ duration(position) }} | {{ duration(mpris:length) }}')
-else
-if [ "$(playerctl -i firefox,chromium status)" = "Paused" ]
-then	
-	output=$(playerctl -i firefox,chromium metadata --format '{{ trunc(artist,24) }} - {{ trunc(title,26) }}')
-	output2=$(playerctl -i firefox,chromium metadata --format '{{ duration(position) }} | {{ duration(mpris:length) }}  {{ uc(status) }}')
-else
-	output=""
+#Format outputs for panel
+output1=$(echo $artist | sed 's/\&/\&amp;/g')
 
+if [ "$status" = "Paused" ]
+then output2="$duration  PAUSED"
+else 
+if [ "$status" = "Playing" ]
+then output2=$duration
+else output2=""
 fi
 fi
 
-output=$(echo $output | sed 's/\&/\&amp;/g')
-echo "<span size='medium'>$output</span>"
-echo $output2
+#panel output
+echo "<span size='medium'>$output1</span>"
+echo "$output2"
