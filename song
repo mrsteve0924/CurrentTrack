@@ -8,7 +8,7 @@ status=$(playerctl -i firefox,chromium status)
 artist=$(playerctl -i firefox,chromium metadata --format '{{ trunc(artist,24) }} - {{ trunc(title,26) }}')
 duration=$(playerctl -i firefox,chromium metadata --format '{{ duration(position) }} | {{ duration(mpris:length) }}')
 
-#Format outputs for panel
+#Assign values to outputs for panel
 output1=$(echo $artist | sed 's/\&/\&amp;/g')
 
 if [ "$status" = "Paused" ]
