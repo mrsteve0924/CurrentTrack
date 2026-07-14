@@ -1,0 +1,52 @@
+#!/bin/bash
+
+ICON_DIR="$HOME/.icons"
+ICON_PATH="$ICON_DIR/now-playing.png"
+TRANSPARENT_ICON="$ICON_DIR/transparent.png"
+PANEL_CONFIG="$HOME/.config/wayfire/wf-shell.ini"
+IGNORES="firefox,chromium"
+
+mkdir -p "$ICON_DIR"
+[ -f "$TRANSPARENT_ICON" ] || magick -size 1x1 xc:none "$TRANSPARENT_ICON"
+
+set_transparent() {
+    if [ "$(readlink "$ICON_PATH" 2>/dev/null)" != "$TRANSPARENT_ICON" ]; then
+        ln -sfn "$TRANSPARENT_ICON" "$ICON_PATH"
+        #touch "$PANEL_CONFIG"
+    fi
+}
+
+if ! playerctl -i "$IGNORES" status >/dev/null 2>&1; then
+    set_transparent
+    exit 0
+fi
+
+ART_URL=$(playerctl -i "$IGNORES" metadata mpris:artUrl 2>/dev/null)
+
+if [ -z "$ART_URL" ]; then
+    set_transparent
+    exit 0
+fi
+
+case "$ART_URL" in
+    file://*)
+        ART_PATH="${ART_URL#file://}"
+        ART_PATH="$(python3 -c "import urllib.parse,sys; print(urllib.parse.unquote(sys.argv[1]))" "$ART_PATH")"
+        ;;
+    *)
+        set_transparent
+        exit 0
+        ;;
+esac
+
+if [ ! -f "$ART_PATH" ]; then
+    set_transparent
+    exit 0
+fi
+
+CURRENT_TARGET=$(readlink "$ICON_PATH" 2>/dev/null)
+
+if [ "$CURRENT_TARGET" != "$ART_PATH" ]; then
+    ln -sfn "$ART_PATH" "$ICON_PATH"
+    #touch "$PANEL_CONFIG"
+fi

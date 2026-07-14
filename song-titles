@@ -1,0 +1,35 @@
+#!/bin/bash
+#compare song title from file name to song title in metadata
+
+find /mnt/files.ntfs/Multimedia/Music \
+     "/mnt/files.ntfs/Multimedia/iTunes/iTunes Media" \
+     \( -path '*/.*' -prune \) -o \
+     -type f \
+     \( -iname '*.mp3' -o -iname '*.flac' -o -iname '*.m4a' \) \
+     -print |
+
+while IFS= read -r file; do
+
+filename="${file##*/}"
+filename="${filename%.*}"
+
+name_title="${filename##*-}"
+name_title="${name_title# }"
+
+title=$(ffprobe -v quiet \
+    -show_entries format_tags=title \
+    -of default=noprint_wrappers=1:nokey=1 \
+    "$file")
+
+name_title="${name_title// /}"
+title="${title// /}"
+
+name_title="${name_title,,}"
+title="${title,,}"
+
+if [[ "$name_title" != "$title" ]]; then
+    printf 'FILE : %s\n' "$file"
+    printf 'NAME : %s\n' "$name_title"
+    printf 'TITLE: %s\n\n' "$title"
+fi
+done

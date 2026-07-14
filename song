@@ -1,25 +1,45 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-#echo "$(date) PID=$$" >> /tmp/myscript.pidlog
+# Update album-art icon first
+song-icon >/dev/null 2>&1
 
-tooltip=$(playerctl metadata --format '{{ artist }} - {{ title }}')
+# Programs to ignore when querying playerctl.
+IGNORES="firefox,chromium"
 
-status=$(playerctl -i firefox,chromium status)
-artist=$(playerctl -i firefox,chromium metadata --format '{{ trunc(artist,24) }} - {{ trunc(title,26) }}')
-duration=$(playerctl -i firefox,chromium metadata --format '{{ duration(position) }} | {{ duration(mpris:length) }}')
 
-#Assign values to outputs for panel
-output1=$(echo $artist | sed 's/\&/\&amp;/g')
+# Query playerctl once and return status, track text, position, and length.
+line=$(playerctl -i "$IGNORES" metadata \
+       --format '{{status}}|{{artist}} - {{title}}|{{position}}|{{mpris:length}}' 2>/dev/null) || {
+    echo ""
+    echo ""
+    exit 0
+}
 
-if [ "$status" = "Paused" ]
-then output2="$duration  PAUSED"
-else 
-if [ "$status" = "Playing" ]
-then output2=$duration
-else output2=""
+# Split the returned fields into variables using "|" as the separator.
+IFS='|' read -r status artist pos len <<< "$line"
+
+#replace any ampersands with pango supported &amp
+artist=${artist//&/&amp;}
+
+# Convert playerctl timestamps from microseconds to seconds.
+pos=$((pos/1000000))
+len=$((len/1000000))
+
+
+# Format playback position and track length as fixed-width MM:SS.
+duration=$(printf "%02d:%02d | %02d:%02d" \
+    $((pos/60)) $((pos%60)) \
+    $((len/60)) $((len%60)))
+
+
+# Print the track on the first line and playback time on the second line.
+if [[ "$status" == "Paused" ]]; then
+    echo "$artist"
+    echo "<span font_features='tnum=1'>$duration  PAUSED</span>"
+elif [[ "$status" == "Playing" ]]; then
+    echo "$artist"
+    echo "<span font_features='tnum=1'>$duration</span>"
+else
+    echo ""
+    echo ""
 fi
-fi
-
-#panel output
-echo "<span size='medium'>$output1</span>"
-echo "$output2"
