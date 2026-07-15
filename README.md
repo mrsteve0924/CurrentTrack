@@ -1,3 +1,6 @@
-I use this in conjunction with my panel (wf-panel from wayfire) to show metadata from current playing audio
+Show metadata in panel (wf-panel) from current playing song including:   
+Artist, Song Title   
+Elapsed Time and Length   
+Album Art Icon
 
-![2024-12-19_14:58:32](https://github.com/user-attachments/assets/82088b1b-9d56-450b-b5b2-7b689fc39cb8)
+<img width="582" height="55" alt="2026-07-14_22:54:55" src="https://github.com/user-attachments/assets/36a82b3a-2b8c-43c2-a15a-dde72c52cde1" />
